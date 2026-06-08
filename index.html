@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0045)file:///C:/Users/mad_c/Downloads/index_1.html -->
+<!-- saved from url=(0045)file:///C:/Users/mad_c/Downloads/index_2.html -->
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -448,7 +448,7 @@ select.form-inp option{background:#111;}
 <!-- ━━━━━━━━━━ TOP BAR ━━━━━━━━━━ -->
 <div class="top-bar show" id="top-bar">
   <button class="bar-btn" id="bar-back-btn" onclick="goHome()">← 入口へ</button>
-  <span class="bar-title" id="bar-title">失敗館</span>
+  <span class="bar-title" id="bar-title">成功館</span>
   <div class="bar-actions">
     <button class="bar-btn" onclick="openSearch()">🔍</button>
     <button class="bar-btn" onclick="openContact()">✉</button>
@@ -513,7 +513,7 @@ select.form-inp option{background:#111;}
 </div>
 
 <!-- ━━━━━━━━━━ FAIL FLOOR ━━━━━━━━━━ -->
-<div class="floor-section active" id="floor-fail">
+<div class="floor-section" id="floor-fail">
   <div class="floor-hero fail-hero">
     <div class="floor-tag fail-tag">FLOOR 1 — FAILURES</div>
     <div class="floor-title fail-title">失　敗　館</div>
@@ -583,7 +583,7 @@ select.form-inp option{background:#111;}
     <div class="submit-card">
       <div class="submit-title">失敗館 収蔵応募</div>
       <div class="submit-sub">あなたの失敗を、名画として収蔵いたします。<br>審査後、収蔵番号と証明書を発行します。</div>
-      <div id="fail-form-wrap" style="display: none;">
+      <div id="fail-form-wrap" style="display: block;">
         <div class="form-grp">
           <label class="form-lbl">作品名 *</label>
           <input class="form-inp" id="sub-fail-title" type="text" placeholder="例：バナナの裏切り">
@@ -623,7 +623,7 @@ select.form-inp option{background:#111;}
             <input type="file" accept="image/*" id="sub-fail-img" style="display:none" onchange="previewSubmitImg(this,&#39;fail&#39;)">
             <span class="img-upload-btn-lbl" onclick="document.getElementById(&#39;sub-fail-img&#39;).click()">📷 画像を選択</span>
             <div class="img-upload-hint">JPG・PNG・GIF</div>
-            <div class="img-preview-wrap" id="sub-fail-preview"><img></div>
+            <div class="img-preview-wrap" id="sub-fail-preview" style="display: none;"><img src="file:///C:/Users/mad_c/Downloads/index_2.html"></div>
           </div>
         </div>
         <div style="background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.15);border-radius:2px;padding:10px 14px;margin-bottom:16px;">
@@ -632,7 +632,7 @@ select.form-inp option{background:#111;}
         </div>
         <button class="submit-btn" onclick="submitWork(&#39;fail&#39;)">収蔵を申請する</button>
       </div>
-      <div class="submit-success" id="fail-submit-ok" style="display: block;">
+      <div class="submit-success" id="fail-submit-ok" style="display: none;">
         <div class="submit-success-icon">📬</div>
         <div class="submit-success-msg">作品の申請を受け付けました。<br>審査後、収蔵番号と証明書をご連絡いたします。<br><br>人生博物館に足をお運びいただき<br>ありがとうございます。</div>
       </div>
@@ -656,7 +656,7 @@ select.form-inp option{background:#111;}
     <div class="sec-hd"><span class="sec-t">新着展示作品</span><span class="sec-line"></span>
       <button class="sec-more" onclick="openHallAll(&#39;unfinish&#39;)">全て見る →</button>
     </div>
-    <div id="unfinish-new" class="cards-grid"></div>
+    <div id="unfinish-new" class="cards-grid"><div class="empty-st" style="grid-column:1/-1"><div class="empty-icon">✏️</div><div class="empty-msg">まだ展示作品がありません。<br>最初の応募をお待ちしております。</div></div></div>
   </div>
   <div class="section">
     <div class="sec-hd"><span class="sec-t">ランキング</span><span class="sec-line"></span></div>
@@ -664,11 +664,31 @@ select.form-inp option{background:#111;}
       <button class="rank-tab active" onclick="switchRank(&#39;unfinish&#39;,&#39;empathy&#39;,this)">共感率順</button>
       <button class="rank-tab" onclick="switchRank(&#39;unfinish&#39;,&#39;visitors&#39;,this)">来館者順</button>
     </div>
-    <div id="unfinish-rank" class="rank-list"></div>
+    <div id="unfinish-rank" class="rank-list"><div class="empty-st"><div class="empty-msg">まだ作品がありません</div></div></div>
   </div>
   <div class="section">
     <div class="sec-hd"><span class="sec-t">展示室</span><span class="sec-line"></span></div>
-    <div id="unfinish-halls" class="hall-grid"></div>
+    <div id="unfinish-halls" class="hall-grid"><div class="hall-cell" onclick="openHall(&#39;未完成・創作&#39;,&#39;unfinish&#39;)">
+      <div class="hall-icon">🎨</div>
+      <div class="hall-name">未完成・創作<br><span style="font-size:9px;color:var(--dim)">創作</span></div>
+      <div class="hall-cnt">0点</div>
+    </div><div class="hall-cell" onclick="openHall(&#39;未完成・仕事&#39;,&#39;unfinish&#39;)">
+      <div class="hall-icon">💼</div>
+      <div class="hall-name">未完成・仕事<br><span style="font-size:9px;color:var(--dim)">仕事</span></div>
+      <div class="hall-cnt">0点</div>
+    </div><div class="hall-cell" onclick="openHall(&#39;未完成・夢&#39;,&#39;unfinish&#39;)">
+      <div class="hall-icon">🌙</div>
+      <div class="hall-name">未完成・夢<br><span style="font-size:9px;color:var(--dim)">夢</span></div>
+      <div class="hall-cnt">0点</div>
+    </div><div class="hall-cell" onclick="openHall(&#39;未完成・関係&#39;,&#39;unfinish&#39;)">
+      <div class="hall-icon">🤝</div>
+      <div class="hall-name">未完成・関係<br><span style="font-size:9px;color:var(--dim)">関係</span></div>
+      <div class="hall-cnt">0点</div>
+    </div><div class="hall-cell" onclick="openHall(&#39;未完成・その他&#39;,&#39;unfinish&#39;)">
+      <div class="hall-icon">📦</div>
+      <div class="hall-name">未完成・その他<br><span style="font-size:9px;color:var(--dim)">その他</span></div>
+      <div class="hall-cnt">0点</div>
+    </div></div>
   </div>
   <!-- 応募フォーム -->
   <div class="submit-section">
@@ -676,7 +696,7 @@ select.form-inp option{background:#111;}
     <div class="submit-card">
       <div class="submit-title">未完成館 収蔵応募</div>
       <div class="submit-sub">完成していなくていい。途中であることが、すでに作品です。</div>
-      <div id="unfinish-form-wrap">
+      <div id="unfinish-form-wrap" style="display: block;">
         <div class="form-grp">
           <label class="form-lbl">作品名 *</label>
           <input class="form-inp" id="sub-unfinish-title" type="text" placeholder="例：書きかけの小説">
@@ -711,7 +731,7 @@ select.form-inp option{background:#111;}
             <input type="file" accept="image/*" id="sub-unfinish-img" style="display:none" onchange="previewSubmitImg(this,&#39;unfinish&#39;)">
             <span class="img-upload-btn-lbl" onclick="document.getElementById(&#39;sub-unfinish-img&#39;).click()">✏️ 画像を選択</span>
             <div class="img-upload-hint">JPG・PNG・GIF</div>
-            <div class="img-preview-wrap" id="sub-unfinish-preview"><img></div>
+            <div class="img-preview-wrap" id="sub-unfinish-preview" style="display: none;"><img src="file:///C:/Users/mad_c/Downloads/index_2.html"></div>
           </div>
         </div>
         <div style="background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.15);border-radius:2px;padding:10px 14px;margin-bottom:16px;">
@@ -720,7 +740,7 @@ select.form-inp option{background:#111;}
         </div>
         <button class="submit-btn" onclick="submitWork(&#39;unfinish&#39;)">収蔵を申請する</button>
       </div>
-      <div class="submit-success" id="unfinish-submit-ok">
+      <div class="submit-success" id="unfinish-submit-ok" style="display: none;">
         <div class="submit-success-icon">✏️</div>
         <div class="submit-success-msg">作品の申請を受け付けました。<br>未完成のまま、ここにあっていい。</div>
       </div>
@@ -729,7 +749,7 @@ select.form-inp option{background:#111;}
 </div>
 
 <!-- ━━━━━━━━━━ SUCCESS FLOOR ━━━━━━━━━━ -->
-<div class="floor-section" id="floor-success">
+<div class="floor-section active" id="floor-success">
   <div class="floor-hero success-hero">
     <div class="floor-tag success-tag">FLOOR 3 — ACHIEVEMENTS</div>
     <div class="floor-title success-title">成　功　館</div>
@@ -744,7 +764,7 @@ select.form-inp option{background:#111;}
     <div class="sec-hd"><span class="sec-t">新着展示作品</span><span class="sec-line"></span>
       <button class="sec-more" onclick="openHallAll(&#39;success&#39;)">全て見る →</button>
     </div>
-    <div id="success-new" class="cards-grid"></div>
+    <div id="success-new" class="cards-grid"><div class="empty-st" style="grid-column:1/-1"><div class="empty-icon">✨</div><div class="empty-msg">まだ展示作品がありません。<br>最初の応募をお待ちしております。</div></div></div>
   </div>
   <div class="section">
     <div class="sec-hd"><span class="sec-t">ランキング</span><span class="sec-line"></span></div>
@@ -752,11 +772,35 @@ select.form-inp option{background:#111;}
       <button class="rank-tab active" onclick="switchRank(&#39;success&#39;,&#39;empathy&#39;,this)">共感率順</button>
       <button class="rank-tab" onclick="switchRank(&#39;success&#39;,&#39;visitors&#39;,this)">来館者順</button>
     </div>
-    <div id="success-rank" class="rank-list"></div>
+    <div id="success-rank" class="rank-list"><div class="empty-st"><div class="empty-msg">まだ作品がありません</div></div></div>
   </div>
   <div class="section">
     <div class="sec-hd"><span class="sec-t">展示室</span><span class="sec-line"></span></div>
-    <div id="success-halls" class="hall-grid"></div>
+    <div id="success-halls" class="hall-grid"><div class="hall-cell" onclick="openHall(&#39;成功・仕事&#39;,&#39;success&#39;)">
+      <div class="hall-icon">🏆</div>
+      <div class="hall-name">成功・仕事<br><span style="font-size:9px;color:var(--dim)">仕事</span></div>
+      <div class="hall-cnt">0点</div>
+    </div><div class="hall-cell" onclick="openHall(&#39;成功・創作&#39;,&#39;success&#39;)">
+      <div class="hall-icon">🎨</div>
+      <div class="hall-name">成功・創作<br><span style="font-size:9px;color:var(--dim)">創作</span></div>
+      <div class="hall-cnt">0点</div>
+    </div><div class="hall-cell" onclick="openHall(&#39;成功・人間関係&#39;,&#39;success&#39;)">
+      <div class="hall-icon">❤️</div>
+      <div class="hall-name">成功・人間関係<br><span style="font-size:9px;color:var(--dim)">人間関係</span></div>
+      <div class="hall-cnt">0点</div>
+    </div><div class="hall-cell" onclick="openHall(&#39;成功・挑戦&#39;,&#39;success&#39;)">
+      <div class="hall-icon">⛰️</div>
+      <div class="hall-name">成功・挑戦<br><span style="font-size:9px;color:var(--dim)">挑戦</span></div>
+      <div class="hall-cnt">0点</div>
+    </div><div class="hall-cell" onclick="openHall(&#39;成功・日常&#39;,&#39;success&#39;)">
+      <div class="hall-icon">🌱</div>
+      <div class="hall-name">成功・日常<br><span style="font-size:9px;color:var(--dim)">日常</span></div>
+      <div class="hall-cnt">0点</div>
+    </div><div class="hall-cell" onclick="openHall(&#39;成功・その他&#39;,&#39;success&#39;)">
+      <div class="hall-icon">✨</div>
+      <div class="hall-name">成功・その他<br><span style="font-size:9px;color:var(--dim)">その他</span></div>
+      <div class="hall-cnt">0点</div>
+    </div></div>
   </div>
   <!-- 応募フォーム -->
   <div class="submit-section">
@@ -764,7 +808,7 @@ select.form-inp option{background:#111;}
     <div class="submit-card">
       <div class="submit-title">成功館 収蔵応募</div>
       <div class="submit-sub">どんな小さな達成も、ここでは名画です。<br>自慢ではなく、記録として展示してください。</div>
-      <div id="success-form-wrap">
+      <div id="success-form-wrap" style="display: block;">
         <div class="form-grp">
           <label class="form-lbl">作品名 *</label>
           <input class="form-inp" id="sub-success-title" type="text" placeholder="例：三日坊主を四日に延ばした男">
@@ -800,7 +844,7 @@ select.form-inp option{background:#111;}
             <input type="file" accept="image/*" id="sub-success-img" style="display:none" onchange="previewSubmitImg(this,&#39;success&#39;)">
             <span class="img-upload-btn-lbl" onclick="document.getElementById(&#39;sub-success-img&#39;).click()">✨ 画像を選択</span>
             <div class="img-upload-hint">JPG・PNG・GIF</div>
-            <div class="img-preview-wrap" id="sub-success-preview"><img></div>
+            <div class="img-preview-wrap" id="sub-success-preview" style="display: none;"><img src="file:///C:/Users/mad_c/Downloads/index_2.html"></div>
           </div>
         </div>
 
@@ -810,7 +854,7 @@ select.form-inp option{background:#111;}
         </div>
         <button class="submit-btn" onclick="submitWork(&#39;success&#39;)">収蔵を申請する</button>
       </div>
-      <div class="submit-success" id="success-submit-ok">
+      <div class="submit-success" id="success-submit-ok" style="display: none;">
         <div class="submit-success-icon">✨</div>
         <div class="submit-success-msg">作品の申請を受け付けました。<br>あなたの達成は、永久にここに展示されます。</div>
       </div>
@@ -821,7 +865,7 @@ select.form-inp option{background:#111;}
 <!-- ━━━━━━━━━━ BOTTOM NAV ━━━━━━━━━━ -->
 <div class="bottom-nav show" id="bottom-nav">
   <button class="nav-item" onclick="goHome()"><span class="nav-icon">🏛</span>入口</button>
-  <button class="nav-item" id="nav-floor" onclick="scrollTo({top:0,behavior:&#39;smooth&#39;})"><span class="nav-icon" id="nav-floor-icon">🎭</span><span id="nav-floor-name">失敗館</span></button>
+  <button class="nav-item" id="nav-floor" onclick="scrollTo({top:0,behavior:&#39;smooth&#39;})"><span class="nav-icon" id="nav-floor-icon">✨</span><span id="nav-floor-name">成功館</span></button>
   <button class="nav-item" onclick="openSearch()"><span class="nav-icon">🔍</span>検索</button>
   <button class="nav-item" onclick="scrollToSubmit()"><span class="nav-icon">📬</span>応募</button>
   <button class="nav-item" onclick="openContact()"><span class="nav-icon">✉</span>お問合せ</button>
@@ -975,7 +1019,24 @@ function enterFloor(floor){
   document.getElementById('nav-floor-name').textContent=cfg.label;
   document.body.style.paddingBottom='80px';
   window.scrollTo(0,0);
+  // フォームをリセット（送信完了画面を隠してフォームを再表示）
+  resetSubmitForm(floor);
   renderFloor(floor);
+}
+
+function resetSubmitForm(floor){
+  const formWrap=document.getElementById(floor+'-form-wrap');
+  const okMsg=document.getElementById(floor+'-submit-ok');
+  if(formWrap)formWrap.style.display='block';
+  if(okMsg)okMsg.style.display='none';
+  // 入力欄もクリア
+  ['title','author','desc','cause','lesson'].forEach(f=>{
+    const el=document.getElementById('sub-'+floor+'-'+f);
+    if(el)el.value='';
+  });
+  // 画像プレビューもリセット
+  const prev=document.getElementById('sub-'+floor+'-preview');
+  if(prev){prev.style.display='none';const img=prev.querySelector('img');if(img)img.src='';}
 }
 function goHome(){
   currentFloor=null;
