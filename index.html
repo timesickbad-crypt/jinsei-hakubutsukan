@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0045)file:///C:/Users/mad_c/Downloads/index_4.html -->
+<!-- saved from url=(0045)file:///C:/Users/mad_c/Downloads/index_5.html -->
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -476,7 +476,7 @@ select.form-inp option{background:#111;}
         <span class="floor-name fail">失　敗　館</span>
         <span class="floor-desc">油絵・重厚な額縁<br>誰もが一度は展示作品になっている</span>
       </span>
-      <span class="floor-count" id="fc-fail">1点</span>
+      <span class="floor-count" id="fc-fail">0点</span>
       <span class="floor-arrow">›</span>
     </button>
     <button class="floor-btn unfinish" onclick="enterFloor(&#39;unfinish&#39;)">
@@ -887,28 +887,56 @@ select.form-inp option{background:#111;}
 </div>
 
 <script>
-// ━━━━━ DATA KEYS ━━━━━
-const K={
-  works:'mlb_works',
-  empathy:'mlb_empathy',    // {id:true}
-  ecnt:'mlb_ecnt',           // {id:N}
-  vis:'mlb_vis',             // {id:N}
-  special:'mlb_special',
-  kancho:'mlb_kancho',
-  open:'mlb_open',
-  subs:'mlb_submissions',    // pending submissions
-};
+// ━━━━━ SUPABASE CONFIG ━━━━━
+const SB_URL='https://tnlmhisvqzxxwlpnlodz.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRubG1oaXN2cXp4eHdscG5sb2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MzMzMzMsImV4cCI6MjA5NjUwOTMzM30.l17K_53oVHxLQMsJr0-PJpe1BNafbNEcPX2pe1owRn4';
+
+async function sbFetch(path,opts){
+  opts=opts||{};
+  const res=await fetch(SB_URL+'/rest/v1/'+path,{
+    headers:Object.assign({'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},opts.headers||{}),
+    method:opts.method||'GET',
+    body:opts.body||undefined
+  });
+  if(!res.ok){console.error('SB',res.status);return null;}
+  const txt=await res.text();
+  return txt?JSON.parse(txt):null;
+}
+const sbGet=(t,q)=>sbFetch(t+(q?'?'+q:''));
+const sbPost=(t,d)=>sbFetch(t,{method:'POST',body:JSON.stringify(d)});
+const sbPatch=(t,q,d)=>sbFetch(t+(q?'?'+q:''),{method:'PATCH',body:JSON.stringify(d)});
+const sbUpsert=(t,d)=>sbFetch(t,{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(d)});
+
+// ━━━━━ LOCAL (開館状況・共感済みフラグのみ) ━━━━━
+const K={open:'mlb_open',empathy:'mlb_empathy'};
 const load=k=>{try{return JSON.parse(localStorage.getItem(k)||'null');}catch{return null;}};
 const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 
-// ━━━━━ GETTERS ━━━━━
+// ━━━━━ WORKS CACHE ━━━━━
+let _cache={works:null,ecnt:{},vis:{},kancho:{},special:{}};
+
+async function loadAllData(){
+  const [works,ecnt,vis,kancho,special]=await Promise.all([
+    sbGet('works','published=eq.true&order=created_at.desc'),
+    sbGet('empathy','select=work_id,count'),
+    sbGet('visitors','select=work_id,count'),
+    sbGet('kancho','select=target,date,body'),
+    sbGet('special','select=*'),
+  ]);
+  _cache.works=works||[];
+  (ecnt||[]).forEach(r=>{_cache.ecnt[r.work_id]=r.count;});
+  (vis||[]).forEach(r=>{_cache.vis[r.work_id]=r.count;});
+  (kancho||[]).forEach(r=>{_cache.kancho[r.target]=r;});
+  (special||[]).forEach(r=>{_cache.special[r.floor]=r;});
+}
+
 const getWorks=(floor)=>{
-  const all=(load(K.works)||[]).filter(w=>w.published);
+  const all=_cache.works||[];
   return floor?all.filter(w=>w.floor===floor):all;
 };
 const getEmpathy=()=>load(K.empathy)||{};
-const getEcnt=()=>load(K.ecnt)||{};
-const getVis=()=>load(K.vis)||{};
+const getEcnt=()=>_cache.ecnt||{};
+const getVis=()=>_cache.vis||{};
 
 // ━━━━━ FLOOR CONFIG ━━━━━
 const FLOOR_CFG={
@@ -1021,7 +1049,7 @@ function updateEntranceCounts(){
 function updateOpenBanner(floor){
   const el=document.getElementById(floor+'-open-banner');
   if(!el)return;
-  const ov=load(K.open);
+  const ov=load(K.open)||'';
   const day=new Date().getDay();
   if(ov==='closed'||(!ov&&day===1)){
     el.className='open-banner closed';el.textContent='本日休館';
@@ -1041,24 +1069,25 @@ function updateFloorStats(floor){
   setEl('fs-'+floor+'-count',works.length);
   setEl('fs-'+floor+'-empathy',totalE);
   setEl('fs-'+floor+'-vis',totalV);
+  // entrance counts
+  updateEntranceCounts();
 }
 
 // ━━━━━ KANCHO ━━━━━
 function renderKancho(floor){
   const el=document.getElementById(floor+'-kancho');if(!el)return;
-  const k=load(K.kancho)||{};
-  const d=k[floor]||k.global;
-  if(!d||!d.text){
+  const d=_cache.kancho[floor]||_cache.kancho['global'];
+  if(!d||!d.body){
     el.innerHTML='<div class="note-card" data-label="館長だより"><div class="note-text" style="color:var(--muted);font-style:italic">準備中です。しばらくお待ちください。</div></div>';
     return;
   }
-  el.innerHTML=`<div class="note-card" data-label="館長だより"><div class="note-date">${d.date||''}</div><div class="note-text">${(d.text||'').replace(/\n/g,'<br>')}</div></div>`;
+  el.innerHTML=`<div class="note-card" data-label="館長だより"><div class="note-date">${d.date||''}</div><div class="note-text">${(d.body||'').replace(/\n/g,'<br>')}</div></div>`;
 }
 
 // ━━━━━ SPECIAL ━━━━━
 function renderSpecial(floor){
   const el=document.getElementById(floor+'-special');if(!el)return;
-  const sp=(load(K.special)||{})[floor];
+  const sp=_cache.special[floor];
   if(!sp||!sp.title){
     el.innerHTML=`<div class="special-card"><div class="special-hd"><div class="special-badge">COMING SOON</div><div class="special-title" style="color:var(--muted)">特別展 準備中</div><div class="special-sub">次の特別展をお楽しみに</div></div></div>`;
     return;
@@ -1077,7 +1106,7 @@ function renderSpecial(floor){
     cdHtml=`<div class="countdown"><div class="cd-u"><div class="cd-n">${d}</div><div class="cd-l">日</div></div><div class="cd-u"><div class="cd-n">${h}</div><div class="cd-l">時間</div></div><div class="cd-u"><div class="cd-n">${m}</div><div class="cd-l">分</div></div></div>`;
   }
   const works=getWorks(floor);
-  const sel=(sp.workIds||[]).map(id=>works.find(w=>w.id===id)).filter(Boolean);
+  const sel=(sp.work_ids||[]).map(id=>works.find(w=>w.id===id)).filter(Boolean);
   const worksHtml=sel.length?'<div class="special-works">'+sel.map((w,i)=>`<div class="sw-item" onclick="openArtwork('${w.id}','${floor}')"><span class="sw-n">${String(i+1).padStart(2,'0')}</span><span class="sw-name">${w.title||'無題'}</span><span class="sw-hall">${w.hall||''}</span></div>`).join('')+'</div>':'';
   el.innerHTML=`<div class="special-card"><div class="special-hd"><div class="special-badge">${badge}</div><div class="special-title">${sp.title}</div>${sp.subtitle?`<div class="special-sub">${sp.subtitle}</div>`:''}<div class="special-sub">${status}</div></div>${cdHtml}${worksHtml}</div>`;
 }
@@ -1163,15 +1192,17 @@ function renderHalls(floor){
 }
 
 // ━━━━━ EMPATHY ━━━━━
-function doEmpathy(id){
+async function doEmpathy(id){
   const emp=getEmpathy();if(emp[id])return;
   emp[id]=true;save(K.empathy,emp);
-  const ec=getEcnt();ec[id]=(ec[id]||0)+1;save(K.ecnt,ec);
-  const w=(load(K.works)||[]).find(x=>x.id===id);
+  const cur=_cache.ecnt[id]||0;
+  const newCnt=cur+1;
+  _cache.ecnt[id]=newCnt;
+  await sbUpsert('empathy',{work_id:id,count:newCnt});
+  const w=(_cache.works||[]).find(x=>x.id===id);
   const cfg=w?FLOOR_CFG[w.floor]:FLOOR_CFG.fail;
-  const cnt=ec[id];
-  document.querySelectorAll(`[id^="eb-${id}"]`,[id=`aeb-${id}`]).forEach(btn=>{
-    if(btn){btn.disabled=true;btn.classList.add('done');btn.textContent=`✓ ${cfg.empathyLabel}（${cnt}）`;}
+  [document.getElementById('eb-'+id),document.getElementById('aeb-'+id)].forEach(btn=>{
+    if(btn){btn.disabled=true;btn.classList.add('done');btn.textContent='✓ '+cfg.empathyLabel+'（'+newCnt+'）';}
   });
   if(currentFloor)updateFloorStats(currentFloor);
 }
@@ -1182,7 +1213,8 @@ function openArtwork(id,floor){
   artList=works;
   artIdx=works.findIndex(w=>w.id===id);
   if(artIdx<0)artIdx=0;
-  const vis=getVis();vis[id]=(vis[id]||0)+1;save(K.vis,vis);
+  _cache.vis[id]=(_cache.vis[id]||0)+1;
+  sbUpsert('visitors',{work_id:id,count:_cache.vis[id]});
   renderArtModal();
   document.getElementById('art-overlay').classList.add('show');
   document.body.style.overflow='hidden';
@@ -1247,7 +1279,8 @@ function renderArtModal(){
 function navArt(d){
   artIdx=Math.max(0,Math.min(artList.length-1,artIdx+d));
   const w=artList[artIdx];
-  const vis=getVis();vis[w.id]=(vis[w.id]||0)+1;save(K.vis,vis);
+  _cache.vis[w.id]=(_cache.vis[w.id]||0)+1;
+  sbUpsert('visitors',{work_id:w.id,count:_cache.vis[w.id]});
   renderArtModal();
 }
 function closeArt(e){if(e.target===document.getElementById('art-overlay'))closeArtDirect();}
@@ -1364,26 +1397,29 @@ function previewSubmitImg(input,floor){
   };
   r.readAsDataURL(file);
 }
-function submitWork(floor){
+async function submitWork(floor){
   const title=document.getElementById('sub-'+floor+'-title').value.trim();
   if(!title){alert('作品名を入力してください');return;}
   const author=document.getElementById('sub-'+floor+'-author').value.trim();
   const hall=document.getElementById('sub-'+floor+'-hall').value;
-  const desc=document.getElementById('sub-'+floor+'-desc').value.trim();
+  const description=document.getElementById('sub-'+floor+'-desc').value.trim();
   const cause=document.getElementById('sub-'+floor+'-cause').value.trim();
   const lesson=(floor==='fail'?document.getElementById('sub-fail-lesson')?.value.trim():'');
   const imgEl=document.querySelector('#sub-'+floor+'-preview img');
   const image=imgEl&&imgEl.src&&!imgEl.src.endsWith('undefined')?imgEl.src:'';
   const id='w_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
-  // 常にpending（未承認）で保存。公開設定は管理画面で館長が決定する
-  const sub={id,floor,title,author:author||'匿名',hall,desc,cause,lesson,image,
-    published:false,createdAt:Date.now(),status:'pending',accNo:'',history:[]};
-  const subs=load(K.subs)||[];
-  subs.push(sub);
-  save(K.subs,subs);
-  // worksには追加しない。管理画面で承認後に追加される
-  document.getElementById(floor+'-form-wrap').style.display='none';
-  document.getElementById(floor+'-submit-ok').style.display='block';
+  const sub={id,floor,title,author:author||'匿名',hall,description,cause,lesson,image,
+    published:false,status:'pending',acc_no:'',history:[],created_at:Date.now()};
+  const btn=document.querySelector('#'+floor+'-form-wrap .submit-btn');
+  if(btn){btn.disabled=true;btn.textContent='送信中...';}
+  const result=await sbPost('submissions',sub);
+  if(result){
+    document.getElementById(floor+'-form-wrap').style.display='none';
+    document.getElementById(floor+'-submit-ok').style.display='block';
+  } else {
+    alert('送信に失敗しました。もう一度お試しください。');
+    if(btn){btn.disabled=false;btn.textContent='収蔵を申請する';}
+  }
 }
 
 // ━━━━━ RENDER FLOOR ━━━━━
@@ -1403,22 +1439,28 @@ document.addEventListener('keydown',e=>{
 });
 
 // ━━━━━ INIT ━━━━━
-// 必ずエントランスから開始（localStorageの状態に関わらず）
 currentFloor=null;
 document.getElementById('entrance').style.display='flex';
 document.querySelectorAll('.floor-section').forEach(s=>s.classList.remove('active'));
 document.getElementById('top-bar').classList.remove('show');
 document.getElementById('bottom-nav').classList.remove('show');
 document.body.style.paddingBottom='0';
-// 全フォームをリセット
 ['fail','unfinish','success'].forEach(f=>{
   const fw=document.getElementById(f+'-form-wrap');
   const ok=document.getElementById(f+'-submit-ok');
   if(fw)fw.style.display='block';
   if(ok)ok.style.display='none';
 });
-updateEntranceCounts();
-setInterval(()=>{if(currentFloor)renderSpecial(currentFloor);},60000);
+// Supabaseからデータ読み込み
+loadAllData().then(()=>{
+  updateEntranceCounts();
+}).catch(e=>console.error('load error',e));
+setInterval(()=>{
+  loadAllData().then(()=>{
+    if(currentFloor)renderFloor(currentFloor);
+    updateEntranceCounts();
+  });
+},30000);
 </script>
 
 

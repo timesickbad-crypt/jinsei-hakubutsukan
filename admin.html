@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0043)file:///C:/Users/mad_c/Downloads/admin.html -->
+<!-- saved from url=(0045)file:///C:/Users/mad_c/Downloads/admin_1.html -->
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -184,41 +184,7 @@ if(sessionStorage.getItem('mlb_admin_auth')==='1'){
     <button class="fsb success-bar" onclick="filterSubs(&#39;success&#39;)">成功館</button>
     <button class="fsb" style="border-bottom-color:var(--gold);color:var(--gold)" onclick="filterSubs(&#39;all&#39;)">全館</button>
   </div>
-  <div id="subs-list">
-    <div class="sub-item">
-      <div class="sub-hd">
-        <span class="floor-dot fd-fail"></span>
-        <div class="sub-title">あ</div>
-        <span class="status-badge sb-pending">審査中</span>
-      </div>
-      <div class="sub-body">
-        <b>作者:</b> 1 ｜ <b>展示館:</b> 第一展示館（転び方図鑑）<br>
-        <b>説明:</b> 1
-      </div>
-      
-      <div class="sub-actions">
-        <button class="btn-sm btn-success" onclick="approveSub(0)">✓ 収蔵決定</button>
-        <button class="btn-sm btn-danger" onclick="rejectSub(0)">✕ 却下</button>
-        <button class="btn-sm btn-danger" onclick="deleteSub(0)">削除</button>
-      </div>
-    </div>
-    <div class="sub-item">
-      <div class="sub-hd">
-        <span class="floor-dot fd-fail"></span>
-        <div class="sub-title">1</div>
-        <span class="status-badge sb-pending">審査中</span>
-      </div>
-      <div class="sub-body">
-        <b>作者:</b> 1 ｜ <b>展示館:</b> 第一展示館（転び方図鑑）<br>
-        <b>説明:</b> 1
-      </div>
-      <img src="./管理画面 — 人生博物館_files/index_2.html" style="max-width:80px;max-height:60px;border:1px solid var(--border);margin-bottom:8px;">
-      <div class="sub-actions">
-        <button class="btn-sm btn-success" onclick="approveSub(1)">✓ 収蔵決定</button>
-        <button class="btn-sm btn-danger" onclick="rejectSub(1)">✕ 却下</button>
-        <button class="btn-sm btn-danger" onclick="deleteSub(1)">削除</button>
-      </div>
-    </div></div>
+  <div id="subs-list"><div style="color:var(--muted);font-size:12px;padding:20px;text-align:center">応募作品がありません</div></div>
 </div>
 
 <!-- ━━ WORKS ━━ -->
@@ -434,10 +400,31 @@ if(sessionStorage.getItem('mlb_admin_auth')==='1'){
 </div>
 
 <script>
-const K={works:'mlb_works',empathy:'mlb_empathy',ecnt:'mlb_ecnt',vis:'mlb_vis',
-  special:'mlb_special',kancho:'mlb_kancho',open:'mlb_open',subs:'mlb_submissions'};
+const SB_URL='https://tnlmhisvqzxxwlpnlodz.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRubG1oaXN2cXp4eHdscG5sb2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MzMzMzMsImV4cCI6MjA5NjUwOTMzM30.l17K_53oVHxLQMsJr0-PJpe1BNafbNEcPX2pe1owRn4';
+async function sbFetch(path,opts){
+  opts=opts||{};
+  const res=await fetch(SB_URL+'/rest/v1/'+path,{
+    headers:Object.assign({'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},opts.headers||{}),
+    method:opts.method||'GET',body:opts.body||undefined
+  });
+  if(!res.ok){console.error('SB',res.status,await res.text());return null;}
+  const txt=await res.text();return txt?JSON.parse(txt):null;
+}
+const sbGet=(t,q)=>sbFetch(t+(q?'?'+q:''));
+const sbPost=(t,d)=>sbFetch(t,{method:'POST',body:JSON.stringify(d)});
+const sbPatch=(t,q,d)=>sbFetch(t+(q?'?'+q:''),{method:'PATCH',body:JSON.stringify(d)});
+const sbDelete=(t,q)=>sbFetch(t+(q?'?'+q:''),{method:'DELETE'});
+const sbUpsert=(t,d)=>sbFetch(t,{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(d)});
+const K={open:'mlb_open'};
 const load=k=>{try{return JSON.parse(localStorage.getItem(k)||'null');}catch{return null;}};
 const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+// キャッシュ
+let _works=[],_subs=[];
+async function loadAdminData(){
+  const [w,s]=await Promise.all([sbGet('works','order=created_at.desc'),sbGet('submissions','order=created_at.desc')]);
+  _works=w||[];_subs=s||[];
+}
 
 const FLOOR_LABELS={fail:'失敗館',unfinish:'未完成館',success:'成功館'};
 const FLOOR_COLORS={fail:'var(--fail)',unfinish:'var(--unfinish)',success:'var(--success)'};
@@ -490,40 +477,36 @@ function syncHallOptions(){
 }
 
 // ── ADD WORK ──
-function addWork(){
+async function addWork(){
   const title=document.getElementById('w-title').value.trim();
   if(!title){alert('作品名を入力してください');return;}
-  const works=load(K.works)||[];
   const floor=document.getElementById('w-floor').value;
   const id='w_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-  const accNo='MHL-'+String(works.filter(w=>w.floor===floor).length+1).padStart(4,'0')+'-'+floor.toUpperCase().slice(0,1);
-  works.push({
-    id,floor,accNo,
-    title,
+  const accNo='MHL-'+String(_works.filter(w=>w.floor===floor).length+1).padStart(4,'0')+'-'+floor.toUpperCase().slice(0,1);
+  const work={id,floor,acc_no:accNo,title,
     author:document.getElementById('w-author').value.trim()||'匿名',
     hall:document.getElementById('w-hall').value,
-    desc:document.getElementById('w-desc').value.trim(),
+    description:document.getElementById('w-desc').value.trim(),
     cause:document.getElementById('w-cause').value.trim(),
     lesson:document.getElementById('w-lesson').value.trim(),
     comment:document.getElementById('w-comment').value.trim(),
     danger:parseInt(document.getElementById('w-danger').value),
     image:adminImgData||'',
     published:document.getElementById('w-pub').value==='true',
-    createdAt:Date.now(),status:'exhibited',history:[],
-    certIssued:false,
-  });
-  save(K.works,works);
+    created_at:Date.now(),status:'exhibited',history:[],cert_issued:false};
+  const result=await sbPost('works',work);
+  if(!result){alert('追加に失敗しました');return;}
   adminImgData=null;
   document.getElementById('w-img-prev').style.display='none';
-  ['w-title','w-author','w-desc','w-cause','w-lesson','w-comment'].forEach(id=>{document.getElementById(id).value='';});
-  renderWorksList();
-  alert(`作品「${title}」を追加しました（${accNo}）`);
+  ['w-title','w-author','w-desc','w-cause','w-lesson','w-comment'].forEach(fid=>{document.getElementById(fid).value='';});
+  await loadAdminData();renderWorksList();
+  alert('作品「'+title+'」を追加しました（'+accNo+'）');
 }
 
 // ── WORKS LIST ──
 function filterWorks(f){currentWorkFilter=f;renderWorksList();}
 function renderWorksList(){
-  const all=load(K.works)||[];
+  const all=_works||[];
   const works=currentWorkFilter==='all'?all:all.filter(w=>w.floor===currentWorkFilter);
   const el=document.getElementById('works-list');
   if(!works.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;padding:20px 0;text-align:center">作品がありません</div>';return;}
@@ -532,7 +515,7 @@ function renderWorksList(){
       <div class="work-item-hd">
         ${w.image?`<img class="work-img-thumb" src="${w.image}">`:``}
         <div style="flex:1">
-          <div class="work-item-no"><span class="floor-dot fd-${w.floor||'fail'}"></span>${w.accNo||'---'}</div>
+          <div class="work-item-no"><span class="floor-dot fd-${w.floor||'fail'}"></span>${w.acc_no||'---'}</div>
           <div class="work-item-title">${w.title||'無題'}</div>
           <div class="work-item-meta">${FLOOR_LABELS[w.floor]||''} ｜ ${w.hall||''} ｜ ${w.author||''}</div>
           <div><span class="status-badge sb-${w.published?'exhibited':'pending'}">${w.published?'公開中':'非公開'}</span></div>
@@ -546,16 +529,15 @@ function renderWorksList(){
       </div>
     </div>`).join('');
 }
-function togglePub(id){
-  const works=load(K.works)||[];
-  const w=works.find(x=>x.id===id);if(!w)return;
-  w.published=!w.published;
-  save(K.works,works);renderWorksList();
+async function togglePub(id){
+  const w=_works.find(x=>x.id===id);if(!w)return;
+  await sbPatch('works','id=eq.'+id,{published:!w.published});
+  await loadAdminData();renderWorksList();
 }
-function deleteWork(id){
+async function deleteWork(id){
   if(!confirm('この作品を削除しますか？'))return;
-  save(K.works,(load(K.works)||[]).filter(w=>w.id!==id));
-  renderWorksList();
+  await sbDelete('works','id=eq.'+id);
+  await loadAdminData();renderWorksList();
 }
 
 // ── MIGRATION ──
@@ -594,7 +576,7 @@ function closeMigDirect(){document.getElementById('mig-overlay').classList.remov
 // ── SUBMISSIONS ──
 function filterSubs(f){currentSubFilter=f;renderSubs();}
 function renderSubs(){
-  const all=load(K.subs)||[];
+  const all=_subs||[];
   const subs=currentSubFilter==='all'?all:all.filter(s=>s.floor===currentSubFilter);
   const el=document.getElementById('subs-list');
   if(!subs.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;padding:20px;text-align:center">応募作品がありません</div>';return;}
@@ -617,41 +599,45 @@ function renderSubs(){
       </div>
     </div>`).join('');
 }
-function approveSub(idx){
-  const subs=load(K.subs)||[];
-  const s=subs[idx];if(!s)return;
-  const works=load(K.works)||[];
+async function approveSub(idx){
+  const s=_subs[idx];if(!s)return;
   const comment=prompt('学芸員コメントを入力してください（省略可）')||'';
-  s.status='exhibited';s.comment=comment;s.published=true;
-  const accNo='MHL-'+String(works.length+1).padStart(4,'0')+'-'+s.floor.toUpperCase().slice(0,1);
-  s.accNo=accNo;s.createdAt=s.createdAt||Date.now();s.history=s.history||[];
-  works.push({...s});
-  save(K.works,works);save(K.subs,subs);
+  const accNo='MHL-'+String(_works.length+1).padStart(4,'0')+'-'+s.floor.toUpperCase().slice(0,1);
+  const work={id:s.id,floor:s.floor,acc_no:accNo,title:s.title,author:s.author,
+    hall:s.hall,description:s.description,cause:s.cause,lesson:s.lesson,
+    comment:comment,image:s.image,published:true,status:'exhibited',
+    history:[],cert_issued:false,created_at:s.created_at||Date.now()};
+  await sbPost('works',work);
+  await sbPatch('submissions','id=eq.'+s.id,{status:'exhibited',comment:comment,acc_no:accNo});
+  await loadAdminData();
   renderSubs();
-  alert(`「${s.title}」を収蔵決定しました（${accNo}）\n証明書タブから発行できます。`);
+  alert('「'+s.title+'」を収蔵決定しました（'+accNo+'）\n証明書タブから発行できます。');
 }
-function rejectSub(idx){
-  const subs=load(K.subs)||[];
-  if(subs[idx])subs[idx].status='rejected';
-  save(K.subs,subs);renderSubs();
+async function rejectSub(idx){
+  const s=_subs[idx];if(!s)return;
+  await sbPatch('submissions','id=eq.'+s.id,{status:'rejected'});
+  await loadAdminData();renderSubs();
 }
-function deleteSub(idx){
+async function deleteSub(idx){
   if(!confirm('この申請を削除しますか？'))return;
-  const subs=load(K.subs)||[];
-  subs.splice(idx,1);save(K.subs,subs);renderSubs();
+  const s=_subs[idx];if(!s)return;
+  await sbDelete('submissions','id=eq.'+s.id);
+  await loadAdminData();renderSubs();
 }
 
 // ── SPECIAL ──
-function renderSpecialWorkList(){
+async function renderSpecialWorkList(){
+  await loadAdminData();
   const floor=document.getElementById('sp-floor').value;
-  const works=(load(K.works)||[]).filter(w=>w.floor===floor&&w.published);
-  const sp=(load(K.special)||{})[floor]||{};
-  const selIds=sp.workIds||[];
+  const works=(_works||[]).filter(w=>w.floor===floor&&w.published);
+  const spList=await sbGet('special','floor=eq.'+floor);
+  const sp=(spList&&spList[0])||{};
+  const selIds=sp.work_ids||[];
   const el=document.getElementById('sp-works-check');
   el.innerHTML=works.length?works.map(w=>`
     <label class="swc-item">
       <input type="checkbox" name="sp-work" value="${w.id}" ${selIds.includes(w.id)?'checked':''} onchange="limitSpecialCheck()">
-      ${w.accNo||'---'} ${w.title||'無題'}
+      ${w.acc_no||'---'} ${w.title||'無題'}
     </label>`).join(''):'<div style="color:var(--muted);font-size:11px">この館に公開作品がありません</div>';
   if(sp.title)document.getElementById('sp-title').value=sp.title;
   if(sp.subtitle)document.getElementById('sp-sub').value=sp.subtitle||'';
@@ -662,26 +648,26 @@ function limitSpecialCheck(){
   const checked=document.querySelectorAll('input[name="sp-work"]:checked');
   if(checked.length>5){event.target.checked=false;alert('最大5点まで選択できます');}
 }
-function saveSpecial(){
+async function saveSpecial(){
   const floor=document.getElementById('sp-floor').value;
-  const checked=[...document.querySelectorAll('input[name="sp-work"]:checked')].map(c=>c.value);
-  const all=load(K.special)||{};
-  all[floor]={title:document.getElementById('sp-title').value.trim(),subtitle:document.getElementById('sp-sub').value.trim(),
-    startDate:document.getElementById('sp-start').value,endDate:document.getElementById('sp-end').value,workIds:checked};
-  save(K.special,all);alert('特別展を保存しました');
+  const checked=[...document.querySelectorAll('input[name="sp-work"]:checked')].map(x=>x.value);
+  const data={floor,title:document.getElementById('sp-title').value.trim(),
+    subtitle:document.getElementById('sp-sub').value.trim(),
+    start_date:document.getElementById('sp-start').value,
+    end_date:document.getElementById('sp-end').value,work_ids:checked};
+  await sbUpsert('special',data);alert('特別展を保存しました');
 }
-function deleteSpecial(){
+async function deleteSpecial(){
   const floor=document.getElementById('sp-floor').value;
-  const all=load(K.special)||{};delete all[floor];save(K.special,all);
+  await sbDelete('special','floor=eq.'+floor);
   alert('特別展を削除しました');
 }
 
 // ── KANCHO ──
-function saveKancho(){
+async function saveKancho(){
   const target=document.getElementById('kancho-target').value;
-  const all=load(K.kancho)||{};
-  all[target]={date:document.getElementById('kancho-date').value,text:document.getElementById('kancho-text').value.trim()};
-  save(K.kancho,all);alert('館長だよりを保存しました');
+  const data={target,date:document.getElementById('kancho-date').value,body:document.getElementById('kancho-text').value.trim()};
+  await sbUpsert('kancho',data);alert('館長だよりを保存しました');
 }
 
 // ── CERTIFICATE ──
@@ -689,7 +675,7 @@ function renderCertSelect(){
   const works=load(K.works)||[];
   const sel=document.getElementById('cert-work-sel');
   sel.innerHTML='<option value="">-- 作品を選んでください --</option>'+
-    works.filter(w=>w.published).map(w=>`<option value="${w.id}">[${FLOOR_LABELS[w.floor]}] ${w.accNo||'---'} ${w.title||'無題'}</option>`).join('');
+    works.filter(w=>w.published).map(w=>`<option value="${w.id}">[${FLOOR_LABELS[w.floor]}] ${w.acc_no||'---'} ${w.title||'無題'}</option>`).join('');
 }
 function openCertFor(id){
   showTab('cert');
@@ -702,7 +688,7 @@ function renderCertPreview(){
   const id=document.getElementById('cert-work-sel').value;
   const el=document.getElementById('cert-preview-area');
   if(!id){el.innerHTML='';return;}
-  const w=(load(K.works)||[]).find(x=>x.id===id);if(!w)return;
+  const w=(_works||[]).find(x=>x.id===id);if(!w)return;
   const comment=document.getElementById('cert-comment').value||w.comment||'本作品は人生博物館の収蔵審査を経て、正式に収蔵作品として認定されました。';
   const dateStr=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
   el.innerHTML=`
@@ -715,7 +701,7 @@ function renderCertPreview(){
       <div class="cert-row"><span class="cert-key">作者名</span><span class="cert-val">${w.author||'匿名'}</span></div>
       <div class="cert-row"><span class="cert-key">収蔵館</span><span class="cert-val">${FLOOR_LABELS[w.floor]||w.floor}</span></div>
       <div class="cert-row"><span class="cert-key">展示室</span><span class="cert-val">${w.hall||'—'}</span></div>
-      <div class="cert-row"><span class="cert-key">収蔵番号</span><span class="cert-val">${w.accNo||'—'}</span></div>
+      <div class="cert-row"><span class="cert-key">収蔵番号</span><span class="cert-val">${w.acc_no||'—'}</span></div>
       <div class="cert-row"><span class="cert-key">収蔵日</span><span class="cert-val">${dateStr}</span></div>
       <hr class="cert-divider">
       <div class="cert-comment">${comment}</div>
@@ -749,18 +735,20 @@ hr{border:none;border-top:1px solid rgba(139,105,20,.3);margin:16px 0;}
 </head><body>${el.outerHTML}<script>window.onload=()=>window.print();<\/script></body></html>`;
   const blob=new Blob([html],{type:'text/html'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`cert_${w.accNo||'draft'}.html`;a.click();
+  a.download='cert_'+(w.acc_no||'draft')+'.html';a.click();
   // mark cert issued
-  const works=load(K.works)||[];const wi=works.find(x=>x.id===w.id);
-  if(wi){wi.certIssued=true;save(K.works,works);}
+  sbPatch('works','id=eq.'+w.id,{cert_issued:true});
 }
 
 // ── STATS ──
-function renderStats(){
-  const works=load(K.works)||[];
-  const subs=load(K.subs)||[];
-  const ec=load(K.ecnt)||{};
-  const vis=load(K.vis)||{};
+async function renderStats(){
+  await loadAdminData();
+  const works=_works||[];
+  const subs=_subs||[];
+  const ecData=await sbGet('empathy','select=work_id,count')||[];
+  const visData=await sbGet('visitors','select=work_id,count')||[];
+  const ec={};ecData.forEach(r=>{ec[r.work_id]=r.count;});
+  const vis={};visData.forEach(r=>{vis[r.work_id]=r.count;});
   const totalE=Object.values(ec).reduce((a,b)=>a+b,0);
   const totalV=Object.values(vis).reduce((a,b)=>a+b,0);
   document.getElementById('stats-grid').innerHTML=`
@@ -768,8 +756,8 @@ function renderStats(){
     <div class="stat-box"><div class="stat-n">${subs.length}</div><div class="stat-l">総応募数</div></div>
     <div class="stat-box"><div class="stat-n">${totalE}</div><div class="stat-l">共感総数</div></div>
     <div class="stat-box"><div class="stat-n">${totalV}</div><div class="stat-l">総来館者数</div></div>
-    <div class="stat-box"><div class="stat-n">${works.filter(w=>w.certIssued).length}</div><div class="stat-l">証明書発行数</div></div>
-    <div class="stat-box"><div class="stat-n">${subs.filter(s=>s.status==='pending').length}</div><div class="stat-l">審査待ち</div></div>`;
+    <div class="stat-box"><div class="stat-n">${works.filter(w=>w.cert_issued).length}</div><div class="stat-l">証明書発行数</div></div>
+    <div class="stat-box"><div class="stat-n">${subs.filter(s=>s.status==='pending'||!s.status).length}</div><div class="stat-l">審査待ち</div></div>`;
   document.getElementById('floor-stats-detail').innerHTML=['fail','unfinish','success'].map(f=>{
     const fw=works.filter(w=>w.floor===f&&w.published);
     const fe=fw.reduce((a,w)=>a+(ec[w.id]||0),0);
@@ -793,8 +781,9 @@ function saveOpenOverride(){
   save(K.open,document.getElementById('open-override').value);
   alert('保存しました');
 }
-function exportData(){
-  const data={works:load(K.works),subs:load(K.subs),special:load(K.special),kancho:load(K.kancho)};
+async function exportData(){
+  const [works,subs,special,kancho]=await Promise.all([sbGet('works'),sbGet('submissions'),sbGet('special'),sbGet('kancho')]);
+  const data={works,subs,special,kancho};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='museum_export_'+Date.now()+'.json';a.click();
@@ -815,14 +804,16 @@ function doImport(input){
   };
   r.readAsText(f);
 }
-function resetAll(){
+async function resetAll(){
   if(!confirm('全データを削除しますか？この操作は取り消せません。'))return;
-  Object.values(K).forEach(k=>localStorage.removeItem(k));
-  alert('リセットしました');location.reload();
+  await Promise.all([sbDelete('works','id=neq.x'),sbDelete('submissions','id=neq.x'),sbDelete('special','floor=neq.x'),sbDelete('kancho','target=neq.x'),sbDelete('empathy','work_id=neq.x'),sbDelete('visitors','work_id=neq.x')]);
+  localStorage.removeItem(K.open);
+  await loadAdminData();renderSubs();
+  alert('リセットしました');
 }
 
 // ── INIT ──
-renderSubs();
+loadAdminData().then(()=>{renderSubs();});
 </script>
 
 
