@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0045)file:///C:/Users/mad_c/Downloads/index_3.html -->
+<!-- saved from url=(0045)file:///C:/Users/mad_c/Downloads/index_4.html -->
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -476,7 +476,7 @@ select.form-inp option{background:#111;}
         <span class="floor-name fail">失　敗　館</span>
         <span class="floor-desc">油絵・重厚な額縁<br>誰もが一度は展示作品になっている</span>
       </span>
-      <span class="floor-count" id="fc-fail">0点</span>
+      <span class="floor-count" id="fc-fail">1点</span>
       <span class="floor-arrow">›</span>
     </button>
     <button class="floor-btn unfinish" onclick="enterFloor(&#39;unfinish&#39;)">
@@ -498,7 +498,7 @@ select.form-inp option{background:#111;}
       <span class="floor-arrow">›</span>
     </button>
   </div>
-  <div class="open-status" id="entrance-status">— 開館中 —</div>
+  <div class="open-status" id="entrance-status">— 本日休館 —</div>
   <div style="margin-top:32px;padding-top:20px;border-top:1px solid rgba(201,168,76,.1);text-align:center;">
     <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px 20px;margin-bottom:10px;">
       <a href="file:///C:/Users/mad_c/Downloads/legal.html#terms" style="font-size:10px;color:var(--muted);text-decoration:none;letter-spacing:.1em;transition:.2s;" onmouseover="this.style.color=&#39;var(--gold)&#39;" onmouseout="this.style.color=&#39;var(--muted)&#39;">利用規約</a>
@@ -629,6 +629,14 @@ select.form-inp option{background:#111;}
     </div>
   </div>
   <div class="section">
+    <div class="sec-hd"><span class="sec-t">館長だより</span><span class="sec-line"></span></div>
+    <div id="unfinish-kancho"></div>
+  </div>
+  <div class="section">
+    <div class="sec-hd"><span class="sec-t">特別展</span><span class="sec-line"></span></div>
+    <div id="unfinish-special"></div>
+  </div>
+  <div class="section">
     <div class="sec-hd"><span class="sec-t">新着展示作品</span><span class="sec-line"></span>
       <button class="sec-more" onclick="openHallAll(&#39;unfinish&#39;)">全て見る →</button>
     </div>
@@ -715,6 +723,14 @@ select.form-inp option{background:#111;}
       <div class="fstat"><div class="fstat-n" id="fs-success-empathy">0</div><div class="fstat-l">「すごい」</div></div>
       <div class="fstat"><div class="fstat-n" id="fs-success-vis">0</div><div class="fstat-l">来館者数</div></div>
     </div>
+  </div>
+  <div class="section">
+    <div class="sec-hd"><span class="sec-t">館長だより</span><span class="sec-line"></span></div>
+    <div id="success-kancho"></div>
+  </div>
+  <div class="section">
+    <div class="sec-hd"><span class="sec-t">特別展</span><span class="sec-line"></span></div>
+    <div id="success-special"></div>
   </div>
   <div class="section">
     <div class="sec-hd"><span class="sec-t">新着展示作品</span><span class="sec-line"></span>
@@ -1374,7 +1390,8 @@ function submitWork(floor){
 function renderFloor(floor){
   updateOpenBanner(floor);
   updateFloorStats(floor);
-  if(floor==='fail'){renderKancho('fail');renderSpecial('fail');}
+  renderKancho(floor);
+  renderSpecial(floor);
   renderNew(floor);
   renderRanking(floor);
   renderHalls(floor);
