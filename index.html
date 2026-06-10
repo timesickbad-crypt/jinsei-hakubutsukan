@@ -903,9 +903,16 @@ document.addEventListener('keydown',e=>{
 // ━━━━━ INIT ━━━━━
 buildHallPages();
 buildEntranceNav();
+// エントランスを必ず表示
+document.getElementById('entrance').style.display='flex';
+document.getElementById('top-bar').style.display='none';
+document.getElementById('bottom-nav').style.display='none';
 loadAllData().then(()=>{
   updateEntranceCounts();
-}).catch(e=>console.error('load error',e));
+}).catch(e=>{
+  console.error('load error',e);
+  updateEntranceCounts();
+});
 setInterval(()=>{
   loadAllData().then(()=>{
     updateEntranceCounts();

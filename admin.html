@@ -227,9 +227,14 @@ if(sessionStorage.getItem('mlb_admin_auth')==='1'){
       <div class="form-grp">
         <label>展示館（フロア）</label>
         <select id="w-floor">
-          <option value="fail">失敗館</option>
-          <option value="unfinish">未完成館</option>
-          <option value="success">成功館</option>
+          <option value="memory">第一展示館　記憶館</option>
+          <option value="words">第二展示館　言葉館</option>
+          <option value="unfinish">第三展示館　未完成館</option>
+          <option value="branch">第四展示館　分岐館</option>
+          <option value="treasure">第五展示館　宝物館</option>
+          <option value="failure">第六展示館　失敗館</option>
+          <option value="lifework">第七展示館　人生作品館</option>
+          <option value="future">第八展示館　未来館</option>
         </select>
       </div>
     </div>
@@ -252,7 +257,7 @@ if(sessionStorage.getItem('mlb_admin_auth')==='1'){
     </div>
     <div class="form-row">
       <div class="form-grp">
-        <label>失敗原因 / 達成過程</label>
+        <label>詳細・補足（失敗原因・達成過程など）</label>
         <input type="text" id="w-cause">
       </div>
       <div class="form-grp">
