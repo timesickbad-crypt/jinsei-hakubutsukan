@@ -510,8 +510,8 @@ function buildEntranceNav(){
     </button>`).join('');
   // search filters
   document.getElementById('search-filters').innerHTML=
-    '<button class="sf-btn active" onclick="setSearchHall('all',this)">全館</button>'+
-    HALLS.map(h=>`<button class="sf-btn" onclick="setSearchHall('${h.id}',this)">${h.name}</button>`).join('');
+    '<button class="sf-btn active" onclick="setSearchHall(&quot;all&quot;,this)">全館</button>'+
+    HALLS.map(h=>'<button class="sf-btn" onclick="setSearchHall(&quot;'+h.id+'&quot;,this)">'+h.name+'</button>').join('');
 }
 
 // ━━━━━ ENTRANCE COUNTS ━━━━━
@@ -596,8 +596,7 @@ function renderKancho(hallId){
     el.innerHTML='<div class="note-card" data-label="館長だより"><div class="note-text" style="color:var(--muted);font-style:italic">準備中です。</div></div>';
     return;
   }
-  el.innerHTML='<div class="note-card" data-label="館長だより"><div class="note-date">'+(d.date||'')+'</div><div class="note-text">'+(d.body||'').replace(/
-/g,'<br>')+'</div></div>';
+  el.innerHTML='<div class="note-card" data-label="館長だより"><div class="note-date">'+(d.date||'')+'</div><div class="note-text">'+(d.body||'').split('\n').join('<br>')+'</div></div>';
 }
 function renderSpecial(hallId){
   const el=document.getElementById('special-'+hallId);if(!el)return;
@@ -621,7 +620,7 @@ function renderSpecial(hallId){
   }
   const works=getWorks(hallId);
   const sel=(sp.work_ids||[]).map(id=>works.find(w=>w.id===id)).filter(Boolean);
-  const worksHtml=sel.length?'<div class="special-works">'+sel.map((w,i)=>'<div class="sw-item" onclick="openArtwork(''+w.id+'')"><span class="sw-n">'+String(i+1).padStart(2,'0')+'</span><span class="sw-name">'+(w.title||'無題')+'</span></div>').join('')+'</div>':'';
+    const worksHtml=sel.length?'<div class="special-works">'+sel.map(function(w,i){return '<div class="sw-item" onclick="openArtwork(&quot;'+w.id+'&quot;)"><span class="sw-n">'+String(i+1).padStart(2,'0')+'</span><span class="sw-name">'+(w.title||'無題')+'</span></div>';}).join('')+'</div>':'';
   el.innerHTML='<div class="special-card"><div class="special-hd"><div class="special-badge">'+badge+'</div><div class="special-title">'+sp.title+'</div>'+(sp.subtitle?'<div class="special-sub">'+sp.subtitle+'</div>':'')+'<div class="special-sub">'+status+'</div></div>'+cdHtml+worksHtml+'</div>';
 }
 
@@ -630,7 +629,6 @@ function cardHTML(w){
   const emp=load(K.empathy)||{};
   const ec=_cache.ecnt||{};
   const hasEmp=!!emp[w.id];const cnt=ec[w.id]||0;
-  // メディアタイプ判定
   let mediaType='image';
   if(w.video_url)mediaType='video';
   else if(w.audio_url)mediaType='audio';
@@ -638,23 +636,24 @@ function cardHTML(w){
   if(w.image){
     imgPart='<img src="'+w.image+'" alt="'+(w.title||'')+'">';
   } else {
-    const h=HALLS.find(x=>x.id===w.hall)||{icon:'🖼'};
+    const h=HALLS.find(function(x){return x.id===w.hall;})||{icon:'🖼'};
     imgPart='<div class="card-placeholder"><span style="font-size:26px">'+h.icon+'</span><span class="card-ph-sub">NO IMAGE</span></div>';
   }
   const mediaBadge=mediaType!=='image'?'<div class="media-badge">'+(mediaType==='video'?'▶ 動画':'♪ 音声')+'</div>':'';
-  const hallName=(HALLS.find(x=>x.id===w.hall)||{name:w.hall||'—'}).name;
-  return '<div class="art-card"><div class="card-frame" onclick="openArtwork(''+w.id+'')">'
+  const hallName=(HALLS.find(function(x){return x.id===w.hall;})||{name:w.hall||'—'}).name;
+  const wid=w.id;
+  return '<div class="art-card">'
+    +'<div class="card-frame" onclick="openArtwork(&quot;'+wid+'&quot;)">'
     +'<div class="card-frame-inner">'+imgPart+mediaBadge+'</div>'
     +'</div><div class="card-body">'
     +'<div class="card-no">'+(w.acc_no||'No.---')+'</div>'
-    +'<div class="card-title" onclick="openArtwork(''+w.id+'')">'+(w.title||'無題')+'</div>'
+    +'<div class="card-title" onclick="openArtwork(&quot;'+wid+'&quot;)">'+(w.title||'無題')+'</div>'
     +'<div class="card-hall">'+hallName+'</div>'
-    +'<button class="empathy-btn'+(hasEmp?' done':'')+'" id="eb-'+w.id+'" onclick="doEmpathy(''+w.id+'')" '+(hasEmp?'disabled':'')+'>'
+    +'<button class="empathy-btn'+(hasEmp?' done':'')+'" id="eb-'+wid+'" onclick="doEmpathy(&quot;'+wid+'&quot;)" '+(hasEmp?'disabled':'')+'>'
     +(hasEmp?'✓ これ俺だ（'+cnt+'）':'🤦 これ俺だ（'+cnt+'）')
     +'</button></div></div>';
 }
 
-// ━━━━━ NEW WORKS ━━━━━
 function renderNew(hallId){
   const works=getWorks(hallId);
   const el=document.getElementById('new-'+hallId);if(!el)return;
@@ -667,258 +666,22 @@ function renderNew(hallId){
 
 // ━━━━━ RANKING ━━━━━
 function switchRank(mode,btn,hallId){
-  if(btn){btn.closest('.rank-tabs').querySelectorAll('.rank-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');}
+  if(btn){btn.closest('.rank-tabs').querySelectorAll('.rank-tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');}
   renderRanking(hallId,mode);
 }
 function renderRanking(hallId,mode){
   mode=mode||'empathy';
-  const works=getWorks(hallId);
-  const ec=_cache.ecnt||{};const vis=_cache.vis||{};
-  const el=document.getElementById('rank-'+hallId);if(!el)return;
+  var works=getWorks(hallId);
+  var ec=_cache.ecnt||{};var vis=_cache.vis||{};
+  var el=document.getElementById('rank-'+hallId);if(!el)return;
   if(!works.length){el.innerHTML='<div class="empty-st"><div class="empty-msg">まだ作品がありません</div></div>';return;}
-  const sorted=mode==='empathy'
-    ?[...works].sort((a,b)=>(ec[b.id]||0)-(ec[a.id]||0)).slice(0,8)
-    :[...works].sort((a,b)=>(vis[b.id]||0)-(vis[a.id]||0)).slice(0,8);
-  el.innerHTML=sorted.map((w,i)=>{
-    const val=mode==='empathy'?(ec[w.id]||0)+'共感':(vis[w.id]||0)+'人';
-    return '<div class="rank-item" onclick="openArtwork(''+w.id+'')"><div class="rank-no'+(i<3?' top3':'')+'">'+( i+1)+'</div><div class="rank-info"><div class="rank-name">'+(w.title||'無題')+'</div><div class="rank-meta">'+(HALLS.find(x=>x.id===w.hall)||{name:''}).name+'</div></div><div class="rank-val">'+val+'</div></div>';
+  var sorted=mode==='empathy'
+    ?works.slice().sort(function(a,b){return (ec[b.id]||0)-(ec[a.id]||0);}).slice(0,8)
+    :works.slice().sort(function(a,b){return (vis[b.id]||0)-(vis[a.id]||0);}).slice(0,8);
+  el.innerHTML=sorted.map(function(w,i){
+    var val=mode==='empathy'?(ec[w.id]||0)+'共感':(vis[w.id]||0)+'人';
+    var hallObj=HALLS.find(function(x){return x.id===w.hall;})||{name:''};
+    return '<div class="rank-item" onclick="openArtwork(&quot;'+w.id+'&quot;)"><div class="rank-no'+(i<3?' top3':'')+'">'+(i+1)+'</div><div class="rank-info"><div class="rank-name">'+(w.title||'無題')+'</div><div class="rank-meta">'+hallObj.name+'</div></div><div class="rank-val">'+val+'</div></div>';
   }).join('');
 }
-
-// ━━━━━ EMPATHY ━━━━━
-async function doEmpathy(id){
-  const emp=load(K.empathy)||{};if(emp[id])return;
-  emp[id]=true;save(K.empathy,emp);
-  const newCnt=(_cache.ecnt[id]||0)+1;
-  _cache.ecnt[id]=newCnt;
-  await sbUpsert('empathy',{work_id:id,count:newCnt});
-  [document.getElementById('eb-'+id),document.getElementById('aeb-'+id)].forEach(btn=>{
-    if(btn){btn.disabled=true;btn.classList.add('done');btn.textContent='✓ これ俺だ（'+newCnt+'）';}
-  });
-  if(currentHall)updateHallStats(currentHall);
-}
-
-// ━━━━━ ARTWORK MODAL ━━━━━
-function openArtwork(id){
-  const works=currentHall?getWorks(currentHall):_cache.works||[];
-  artList=works;
-  artIdx=works.findIndex(w=>w.id===id);
-  if(artIdx<0)artIdx=0;
-  _cache.vis[id]=(_cache.vis[id]||0)+1;
-  sbUpsert('visitors',{work_id:id,count:_cache.vis[id]});
-  renderArtModal();
-  document.getElementById('art-overlay').classList.add('show');
-  document.body.style.overflow='hidden';
-}
-function renderArtModal(){
-  const w=artList[artIdx];if(!w)return;
-  const emp=load(K.empathy)||{};
-  const ec=_cache.ecnt||{};
-  const hasEmp=!!emp[w.id];const cnt=ec[w.id]||0;
-  const hallObj=HALLS.find(x=>x.id===w.hall)||{name:w.hall||'—',icon:'🖼'};
-
-  // メディア表示
-  let mediaHtml='';
-  if(w.video_url){
-    // YouTube/その他動画URL変換
-    let embedUrl=w.video_url;
-    const yt=w.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-    if(yt)embedUrl='https://www.youtube.com/embed/'+yt[1];
-    mediaHtml='<div class="media-embed"><iframe src="'+embedUrl+'" allowfullscreen allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"></iframe></div>';
-  } else if(w.audio_url){
-    // SoundCloud埋め込み
-    let audioEmbed=w.audio_url;
-    if(w.audio_url.includes('soundcloud.com')){
-      audioEmbed='https://w.soundcloud.com/player/?url='+encodeURIComponent(w.audio_url)+'&color=%23c9a84c&auto_play=false';
-      mediaHtml='<div class="media-embed"><iframe scrolling="no" src="'+audioEmbed+'" allow="autoplay"></iframe></div>';
-    } else {
-      mediaHtml='<div class="media-embed"><audio controls src="'+w.audio_url+'"></audio></div>';
-    }
-  } else if(w.image){
-    mediaHtml='<div class="gallery-wall"><div class="gw-wire"></div><div class="frame-oil"><div class="frame-inner"><img src="'+w.image+'" alt="'+(w.title||'')+'"></div></div></div>';
-  } else {
-    mediaHtml='<div class="gallery-wall"><div class="gw-wire"></div><div class="frame-oil"><div class="frame-inner"><div class="frame-placeholder"><div class="fp-icon">'+hallObj.icon+'</div><div class="fp-txt">NO IMAGE</div></div></div></div></div>';
-  }
-
-  let secs='';
-  if(w.description)secs+='<div class="art-section"><div class="art-lbl">作品説明</div><div class="art-body">'+w.description.replace(/
-/g,'<br>')+'</div></div>';
-  if(w.cause)secs+='<div class="art-section"><div class="art-lbl">詳細</div><div class="art-body">'+w.cause+'</div></div>';
-  if(w.lesson)secs+='<div class="art-section"><div class="art-lbl">残された教訓</div><div class="art-body">'+w.lesson+'</div></div>';
-  if(w.comment)secs+='<div class="art-section"><div class="art-lbl">学芸員解説</div><div class="art-body">'+w.comment+'</div></div>';
-
-  document.getElementById('art-content').innerHTML=
-    mediaHtml+
-    '<div class="art-plaque"><div class="plaque-no">'+(w.acc_no||'No.---')+'｜'+hallObj.name+'</div>'
-    +'<div class="plaque-title">'+(w.title||'無題')+'</div>'
-    +'<div class="plaque-author">'+(w.author||'作者不詳')+'</div></div>'
-    +secs
-    +'<div class="empathy-wrap"><button class="empathy-main'+(hasEmp?' done':'')+'" id="aeb-'+w.id+'" onclick="doEmpathy(''+w.id+'')" '+(hasEmp?'disabled':'')+'>'
-    +(hasEmp?'✓ これ俺だ（'+cnt+'）':'🤦 これ俺だ（'+cnt+'）')+'</button></div>'
-    +'<div class="art-nav-row"><button class="nav-btn" onclick="navArt(-1)" '+(artIdx===0?'disabled':'')+''>← 前</button>'
-    +'<span class="nav-pos">'+(artIdx+1)+' / '+artList.length+'</span>'
-    +'<button class="nav-btn" onclick="navArt(1)" '+(artIdx===artList.length-1?'disabled':'')+'>次 →</button></div>';
-}
-function navArt(d){
-  artIdx=Math.max(0,Math.min(artList.length-1,artIdx+d));
-  const w=artList[artIdx];
-  _cache.vis[w.id]=(_cache.vis[w.id]||0)+1;
-  sbUpsert('visitors',{work_id:w.id,count:_cache.vis[w.id]});
-  renderArtModal();
-}
-function closeArtOverlay(e){if(e.target===document.getElementById('art-overlay'))closeArtDirect();}
-function closeArtDirect(){
-  document.getElementById('art-overlay').classList.remove('show');
-  document.body.style.overflow='';
-  if(currentHall){updateHallStats(currentHall);renderRanking(currentHall);renderNew(currentHall);}
-}
-
-// ━━━━━ SEARCH ━━━━━
-function openSearch(){
-  document.getElementById('search-overlay').classList.add('show');
-  document.body.style.overflow='hidden';
-  setTimeout(()=>document.getElementById('search-inp').focus(),200);
-}
-function setSearchHall(h,btn){
-  searchHall=h;
-  document.querySelectorAll('.sf-btn').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-  doSearch(document.getElementById('search-inp').value);
-}
-function doSearch(q){
-  const all=searchHall==='all'?(_cache.works||[]).filter(w=>w.published):getWorks(searchHall);
-  const el=document.getElementById('search-res');
-  if(!q.trim()){el.innerHTML='';return;}
-  const lq=q.toLowerCase();
-  const found=all.filter(w=>(w.title||'').toLowerCase().includes(lq)||(w.author||'').toLowerCase().includes(lq)||(w.description||'').toLowerCase().includes(lq));
-  if(!found.length){el.innerHTML='<div class="empty-st"><div class="empty-msg">見つかりませんでした</div></div>';return;}
-  el.innerHTML=found.map(w=>{
-    const h=HALLS.find(x=>x.id===w.hall)||{icon:'🖼',name:w.hall||'—'};
-    return '<div class="rank-item" onclick="openArtwork(''+w.id+'');closeSearchDirect()"><div style="font-size:16px">'+h.icon+'</div><div class="rank-info"><div class="rank-name">'+(w.title||'無題')+'</div><div class="rank-meta">'+h.name+'｜'+(w.author||'作者不詳')+'</div></div><div style="font-size:10px;color:var(--muted)">'+(w.acc_no||'')+'</div></div>';
-  }).join('');
-}
-function closeSearchOverlay(e){if(e.target===document.getElementById('search-overlay'))closeSearchDirect();}
-function closeSearchDirect(){
-  document.getElementById('search-overlay').classList.remove('show');
-  document.body.style.overflow='';
-  document.getElementById('search-inp').value='';
-  document.getElementById('search-res').innerHTML='';
-}
-
-// ━━━━━ HALL ALL MODAL ━━━━━
-function openHallAll(hallId){
-  const h=HALLS.find(x=>x.id===hallId)||{name:hallId,icon:'🖼'};
-  const works=getWorks(hallId);
-  document.getElementById('hall-modal-content').innerHTML=
-    '<div class="room-hd"><div class="room-icon">'+h.icon+'</div><div class="room-title">'+h.name+'　全作品</div><div class="room-desc">'+works.length+'点</div></div>'
-    +'<div class="room-works">'+(works.length?'<div class="cards-grid">'+works.map(w=>cardHTML(w)).join('')+'</div>':'<div class="empty-st"><div class="empty-icon">🖼</div><div class="empty-msg">まだ作品がありません</div></div>')+'</div>';
-  document.getElementById('hall-overlay').classList.add('show');
-  document.body.style.overflow='hidden';
-}
-function closeHallOverlay(e){if(e.target===document.getElementById('hall-overlay'))closeHallDirect();}
-function closeHallDirect(){document.getElementById('hall-overlay').classList.remove('show');document.body.style.overflow='';}
-
-// ━━━━━ CONTACT ━━━━━
-function openContact(){document.getElementById('contact-overlay').classList.add('show');document.body.style.overflow='hidden';}
-function closeContactOverlay(e){if(e.target===document.getElementById('contact-overlay'))closeContactDirect();}
-function closeContactDirect(){document.getElementById('contact-overlay').classList.remove('show');document.body.style.overflow='';}
-function copyEmail(){
-  navigator.clipboard.writeText('time.sick.bad@gmail.com').then(()=>{
-    const btn=document.getElementById('copy-btn');btn.textContent='✓ コピーしました';btn.style.color='var(--gold)';
-    setTimeout(()=>{btn.textContent='📋 アドレスをコピー';btn.style.color='';},2000);
-  });
-}
-
-// ━━━━━ SUBMISSION ━━━━━
-function previewImg(input,hallId){
-  const f=input.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=e=>{
-    const wrap=document.getElementById('sub-'+hallId+'-preview');
-    wrap.style.display='block';wrap.querySelector('img').src=e.target.result;
-  };
-  r.readAsDataURL(f);
-}
-function toggleCertEmail(hallId){
-  const checked=document.getElementById('sub-'+hallId+'-cert-req').checked;
-  const wrap=document.getElementById('sub-'+hallId+'-email-wrap');
-  if(wrap)wrap.style.display=checked?'block':'none';
-}
-async function submitWork(hallId){
-  const title=document.getElementById('sub-'+hallId+'-title').value.trim();
-  if(!title){alert('作品名を入力してください');return;}
-  const certReq=document.getElementById('sub-'+hallId+'-cert-req')?.checked||false;
-  const email=document.getElementById('sub-'+hallId+'-email')?.value.trim()||'';
-  if(certReq&&!email){alert('証明書発行を希望する場合はメールアドレスを入力してください');return;}
-  const imgEl=document.querySelector('#sub-'+hallId+'-preview img');
-  const image=imgEl&&imgEl.src&&!imgEl.src.startsWith('data:image/')?'':imgEl?.src||'';
-  const realImage=imgEl&&imgEl.src&&imgEl.src.startsWith('data:')?imgEl.src:'';
-  const id='w_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
-  const sub={
-    id,hall:hallId,floor:hallId,
-    title,
-    author:document.getElementById('sub-'+hallId+'-author').value.trim()||'匿名',
-    description:document.getElementById('sub-'+hallId+'-desc').value.trim(),
-    video_url:document.getElementById('sub-'+hallId+'-video').value.trim(),
-    audio_url:document.getElementById('sub-'+hallId+'-audio').value.trim(),
-    image:realImage,
-    published:false,status:'pending',acc_no:'',history:[],
-    created_at:Date.now(),cert_requested:certReq,email:email
-  };
-  const btn=document.querySelector('#form-'+hallId+' .submit-btn');
-  if(btn){btn.disabled=true;btn.textContent='送信中...';}
-  const result=await sbPost('submissions',sub);
-  if(result){
-    document.getElementById('form-'+hallId).style.display='none';
-    document.getElementById('ok-'+hallId).style.display='block';
-  } else {
-    alert('送信に失敗しました。もう一度お試しください。');
-    if(btn){btn.disabled=false;btn.textContent='収蔵を申請する';}
-  }
-}
-function resetForm(hallId){
-  const form=document.getElementById('form-'+hallId);
-  const ok=document.getElementById('ok-'+hallId);
-  if(form)form.style.display='block';
-  if(ok)ok.style.display='none';
-  ['title','author','desc','video','audio'].forEach(f=>{
-    const el=document.getElementById('sub-'+hallId+'-'+f);
-    if(el)el.value='';
-  });
-  const prev=document.getElementById('sub-'+hallId+'-preview');
-  if(prev){prev.style.display='none';const img=prev.querySelector('img');if(img)img.src='';}
-  const certEl=document.getElementById('sub-'+hallId+'-cert-req');
-  if(certEl)certEl.checked=false;
-  const emailWrap=document.getElementById('sub-'+hallId+'-email-wrap');
-  if(emailWrap)emailWrap.style.display='none';
-  const emailEl=document.getElementById('sub-'+hallId+'-email');
-  if(emailEl)emailEl.value='';
-}
-
-// ━━━━━ KEYBOARD ━━━━━
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeArtDirect();closeSearchDirect();closeHallDirect();closeContactDirect();}
-});
-
-// ━━━━━ INIT ━━━━━
-buildHallPages();
-buildEntranceNav();
-// エントランスを必ず表示
-document.getElementById('entrance').style.display='flex';
-document.getElementById('top-bar').style.display='none';
-document.getElementById('bottom-nav').style.display='none';
-loadAllData().then(()=>{
-  updateEntranceCounts();
-}).catch(e=>{
-  console.error('load error',e);
-  updateEntranceCounts();
-});
-setInterval(()=>{
-  loadAllData().then(()=>{
-    updateEntranceCounts();
-    if(currentHall)renderHall(currentHall);
-  });
-},30000);
-</script>
-</body>
-</html>
+>
