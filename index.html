@@ -606,6 +606,39 @@ select.form-inp option{background:#111;}
           <div style="font-size:9px;letter-spacing:.2em;color:rgba(201,168,76,.6);margin-bottom:4px;">収蔵について</div>
           <div style="font-size:11px;color:var(--muted);line-height:1.8;">応募後、学芸員による審査を経て収蔵が決定されます。<br>承認されるまで展示はされません。</div>
         </div>
+        <div class="form-grp">
+          <label class="form-lbl" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="sub-success-cert-req" style="width:16px;height:16px;accent-color:var(--gold);" onchange="toggleCertEmail('success')">
+            <span>収蔵証明書の発行を希望する</span>
+          </label>
+        </div>
+        <div class="form-grp" id="sub-success-email-wrap" style="display:none;">
+          <label class="form-lbl">メールアドレス（証明書送付先） *</label>
+          <input class="form-inp" type="email" id="sub-success-email" placeholder="example@email.com">
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">収蔵決定後、館長よりご連絡いたします</div>
+        </div>
+        <div class="form-grp">
+          <label class="form-lbl" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="sub-unfinish-cert-req" style="width:16px;height:16px;accent-color:var(--gold);" onchange="toggleCertEmail('unfinish')">
+            <span>収蔵証明書の発行を希望する</span>
+          </label>
+        </div>
+        <div class="form-grp" id="sub-unfinish-email-wrap" style="display:none;">
+          <label class="form-lbl">メールアドレス（証明書送付先） *</label>
+          <input class="form-inp" type="email" id="sub-unfinish-email" placeholder="example@email.com">
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">収蔵決定後、館長よりご連絡いたします</div>
+        </div>
+        <div class="form-grp">
+          <label class="form-lbl" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="sub-fail-cert-req" style="width:16px;height:16px;accent-color:var(--gold);" onchange="toggleCertEmail('fail')">
+            <span>収蔵証明書の発行を希望する</span>
+          </label>
+        </div>
+        <div class="form-grp" id="sub-fail-email-wrap" style="display:none;">
+          <label class="form-lbl">メールアドレス（証明書送付先） *</label>
+          <input class="form-inp" type="email" id="sub-fail-email" placeholder="example@email.com">
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">収蔵決定後、館長よりご連絡いたします</div>
+        </div>
         <button class="submit-btn" onclick="submitWork('fail')">収蔵を申請する</button>
       </div>
       <div class="submit-success" id="fail-submit-ok">
@@ -1246,7 +1279,7 @@ function renderArtModal(){
   }
 
   let extraSecs='';
-  if(w.desc)   extraSecs+=`<div class="art-section"><div class="art-lbl">作品説明</div><div class="art-body">${w.desc.replace(/\n/g,'<br>')}</div></div>`;
+  if(w.description) extraSecs+=`<div class="art-section"><div class="art-lbl">作品説明</div><div class="art-body">${w.description.replace(/\n/g,'<br>')}</div></div>`;
   if(w.cause)  extraSecs+=`<div class="art-section"><div class="art-lbl">${w.floor==='success'?'達成の過程':'失敗原因'}</div><div class="art-body">${w.cause}</div></div>`;
   if(w.lesson) extraSecs+=`<div class="art-section"><div class="art-lbl">残された教訓</div><div class="art-body">${w.lesson}</div></div>`;
   if(w.comment)extraSecs+=`<div class="art-section"><div class="art-lbl">学芸員解説</div><div class="art-body">${w.comment}</div></div>`;
@@ -1408,8 +1441,12 @@ async function submitWork(floor){
   const imgEl=document.querySelector('#sub-'+floor+'-preview img');
   const image=imgEl&&imgEl.src&&!imgEl.src.endsWith('undefined')?imgEl.src:'';
   const id='w_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  const certReq=document.getElementById('sub-'+floor+'-cert-req')?.checked||false;
+  const email=document.getElementById('sub-'+floor+'-email')?.value.trim()||'';
+  if(certReq&&!email){alert('証明書発行を希望する場合はメールアドレスを入力してください');return;}
   const sub={id,floor,title,author:author||'匿名',hall,description,cause,lesson,image,
-    published:false,status:'pending',acc_no:'',history:[],created_at:Date.now()};
+    published:false,status:'pending',acc_no:'',history:[],created_at:Date.now(),
+    cert_requested:certReq,email:email};
   const btn=document.querySelector('#'+floor+'-form-wrap .submit-btn');
   if(btn){btn.disabled=true;btn.textContent='送信中...';}
   const result=await sbPost('submissions',sub);
