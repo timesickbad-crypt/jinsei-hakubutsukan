@@ -714,7 +714,7 @@ function showTab(id){
   if(id==='submissions')renderSubs();
   if(id==='works'){renderWorksList();renderWorkFloorSelect();}
   if(id==='special')renderSpecialWorkList();
-  if(id==='cert')renderCertSelect();
+  if(id==='cert'){loadAdminData().then(()=>renderCertSelect());}
   if(id==='stats')renderStats();
   if(id==='settings')loadSettings();
 }
@@ -946,11 +946,12 @@ async function saveKancho(){
 
 // ── CERTIFICATE ──
 function renderCertSelect(){
-  const works=load(K.works)||[];
+  const works=_works||[];
   const sel=document.getElementById('cert-work-sel');
   sel.innerHTML='<option value="">-- 作品を選んでください --</option>'+
-    works.filter(w=>w.published).map(w=>`<option value="${w.id}">[${FLOOR_LABELS[w.floor]}] ${w.acc_no||'---'} ${w.title||'無題'}</option>`).join('');
+    works.filter(w=>w.published).map(w=>'<option value="'+w.id+'">['+FLOOR_LABELS[w.floor]+'] '+(w.acc_no||'No.未設定')+' '+(w.title||'無題')+'</option>').join('');
 }
+
 function openCertFor(id){
   showTab('cert');
   setTimeout(()=>{

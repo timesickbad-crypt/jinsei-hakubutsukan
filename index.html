@@ -1157,7 +1157,7 @@ function cardHTML(w){
       <div class="card-frame-inner">${imgPart}<div class="card-badge ${cfg.badgeClass}">${w.hall||cfg.label}</div></div>
     </div>
     <div class="card-body">
-      <div class="card-no">${w.accNo||'No.---'}</div>
+      <div class="card-no">${w.acc_no||'No.---'}</div>
       <div class="card-title" onclick="openArtwork('${w.id}','${w.floor}')">${w.title||'無題'}</div>
       <div class="card-hall">${w.hall||''}</div>
       <button class="empathy-btn${hasEmp?' done':''}" id="eb-${w.id}" onclick="doEmpathy('${w.id}')" ${hasEmp?'disabled':''}>
@@ -1289,7 +1289,7 @@ function renderArtModal(){
       <div class="gw-wire"></div>
       ${frame}
       <div class="art-plaque">
-        <div class="plaque-no">${w.accNo||'No.---'}｜${cfg.label}</div>
+        <div class="plaque-no">${w.acc_no||'No.---'}｜${cfg.label}</div>
         <div class="plaque-title">${w.title||'無題'}</div>
         <div class="plaque-author">${w.author||'作者不詳'}</div>
         <div class="plaque-hall">${w.hall||''}</div>
@@ -1347,7 +1347,7 @@ function doSearch(q){
     return `<div class="rank-item" onclick="openArtwork('${w.id}','${w.floor}');closeSearchDirect()">
       <div style="font-size:16px">${cfg.icon}</div>
       <div class="rank-info"><div class="rank-name">${w.title||'無題'}</div><div class="rank-meta">${cfg.label}｜${w.hall||''}</div></div>
-      <div style="font-size:10px;color:var(--muted)">${w.accNo||''}</div>
+      <div style="font-size:10px;color:var(--muted)">${w.acc_no||''}</div>
     </div>`;
   }).join('');
 }
