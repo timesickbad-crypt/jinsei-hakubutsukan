@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0045)file:///C:/Users/mad_c/Downloads/admin_2.html -->
+<!-- saved from url=(0045)file:///C:/Users/mad_c/Downloads/admin_5.html -->
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -122,7 +122,7 @@ select option{background:#111;}
 <body>
 
 <!-- パスワード認証オーバーレイ -->
-<div id="pw-overlay" style="position:fixed;inset:0;background:#08080f;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;">
+<div id="pw-overlay" style="position: fixed; inset: 0px; background: rgb(8, 8, 15); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px;">
   <div style="text-align:center;margin-bottom:32px;">
     <div style="font-family:&#39;Cinzel&#39;,serif;font-size:11px;letter-spacing:.4em;color:#c9a84c;margin-bottom:8px;">MUSEUM OF HUMAN LIFE</div>
     <div style="font-family:&#39;Cinzel&#39;,serif;font-size:18px;letter-spacing:.2em;color:#c9a84c;">管理画面</div>
@@ -166,17 +166,17 @@ if(sessionStorage.getItem('mlb_admin_auth')==='1'){
 </header>
 
 <div class="tabs">
-  <button class="tab active" onclick="showTab(&#39;submissions&#39;)">📬 応募審査</button>
+  <button class="tab" onclick="showTab(&#39;submissions&#39;)">📬 応募審査</button>
   <button class="tab" onclick="showTab(&#39;works&#39;)">🖼 作品管理</button>
   <button class="tab" onclick="showTab(&#39;special&#39;)">⭐ 特別展</button>
   <button class="tab" onclick="showTab(&#39;kancho&#39;)">📝 館長だより</button>
-  <button class="tab" onclick="showTab(&#39;cert&#39;)">📜 証明書</button>
+  <button class="tab active" onclick="showTab(&#39;cert&#39;)">📜 証明書</button>
   <button class="tab" onclick="showTab(&#39;stats&#39;)">📊 統計</button>
   <button class="tab" onclick="showTab(&#39;settings&#39;)">⚙ 設定</button>
 </div>
 
 <!-- ━━ SUBMISSIONS ━━ -->
-<div class="panel active" id="tab-submissions">
+<div class="panel" id="tab-submissions">
   <div class="sec-title">応募作品の審査</div>
   <div class="floor-stats-bar">
     <button class="fsb fail-bar" onclick="filterSubs(&#39;fail&#39;)">失敗館</button>
@@ -348,16 +348,14 @@ if(sessionStorage.getItem('mlb_admin_auth')==='1'){
 </div>
 
 <!-- ━━ CERT ━━ -->
-<div class="panel" id="tab-cert">
+<div class="panel active" id="tab-cert">
   <div class="sec-title">収蔵証明書の発行</div>
   <div class="form-grp">
     <label>作品を選択</label>
-    <select id="cert-work-sel" onchange="renderCertPreview()">
-      <option value="">-- 作品を選んでください --</option>
-    </select>
+    <select id="cert-work-sel" onchange="renderCertPreview()"><option value="">-- 作品を選んでください --</option><option value="w_1781078582837_a2gm">[失敗館] MHL-0002-F 1</option><option value="w_1781021467094_dmf6">[失敗館] MHL-0001-F 謝ることの大切さ</option></select>
   </div>
 
-  <div id="cert-preview-area"></div>
+  <div id="cert-preview-area"><div style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:2px;padding:14px;font-size:12px;color:var(--muted);line-height:1.8;"><div style="color:var(--gold);font-size:10px;letter-spacing:.2em;margin-bottom:8px;">証明書プレビュー</div><b>謝ることの大切さ</b>　匿名<br>失敗館｜第一展示館（転び方図鑑）<br>収蔵番号：MHL-0001-F</div></div>
   <button class="btn-primary" style="margin-top:14px" onclick="issueCert()">証明書を生成する（HTMLダウンロード）</button>
 </div>
 
@@ -371,6 +369,12 @@ if(sessionStorage.getItem('mlb_admin_auth')==='1'){
 
 <!-- ━━ SETTINGS ━━ -->
 <div class="panel" id="tab-settings">
+  <div class="sec-title">館長名</div>
+  <div class="form-grp">
+    <label>館長名（証明書に表示されます）</label>
+    <input type="text" id="kancho-name" placeholder="例：山田 太郎">
+  </div>
+  <button class="btn-primary" style="margin-bottom:24px" onclick="saveKanchoName()">館長名を保存</button>
   <div class="sec-title">開館状況</div>
   <div class="form-grp">
     <label>手動設定</label>
@@ -720,10 +724,11 @@ function issueCert(){
   certHtml=certHtml.replace('id="cert-accno-display">—','id="cert-accno-display">'+(w.acc_no||'—'));
   certHtml=certHtml.replace('id="cert-date-display">—','id="cert-date-display">'+dateStr);
   certHtml=certHtml.replace('発行日：令和　年　月　日','発行日：'+reiwaStr);
+  const kanchoName=load('mlb_kancho_name')||'';
+  certHtml=certHtml.replace('館　長　之　印', kanchoName ? '館長　'+kanchoName : '');
   const workUrl='https://jinsei-hakubutsukan.netlify.app';
   certHtml=certHtml.replace('id="cert-qr-canvas"','id="cert-qr-canvas" data-url="'+workUrl+'"');
-  const printHtml=certHtml.replace('</body>','<script>window.onload=()=>{window.print();}<\/script></body>');
-  const blob=new Blob([printHtml],{type:'text/html'});
+    const printHtml=certHtml; blob=new Blob([printHtml],{type:'text/html'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='cert_'+(w.acc_no||'draft')+'.html';a.click();
   sbPatch('works','id=eq.'+id,{cert_issued:true});
@@ -732,6 +737,13 @@ function issueCert(){
 function loadSettings(){
   const ov=load(K.open)||'';
   document.getElementById('open-override').value=ov;
+  const kn=load('mlb_kancho_name')||'';
+  document.getElementById('kancho-name').value=kn;
+}
+function saveKanchoName(){
+  const name=document.getElementById('kancho-name').value.trim();
+  save('mlb_kancho_name',name);
+  alert('館長名を保存しました');
 }
 function saveOpenOverride(){
   save(K.open,document.getElementById('open-override').value);
@@ -862,7 +874,7 @@ body{background:#1a1508;display:flex;align-items:center;justify-content:center;m
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>window.addEventListener('DOMContentLoaded',function(){var el=document.getElementById('cert-qr-canvas');if(el){new QRCode(el,{text:el.getAttribute('data-url')||'https://jinsei-hakubutsukan.netlify.app',width:80,height:80,colorDark:'#5a3800',colorLight:'#fdf6e3',correctLevel:QRCode.CorrectLevel.M});}});window.onload=function(){window.print();};</script>
+<script>window.addEventListener('DOMContentLoaded',function(){var el=document.getElementById('cert-qr-canvas');if(el){new QRCode(el,{text:el.getAttribute('data-url')||'https://jinsei-hakubutsukan.netlify.app',width:80,height:80,colorDark:'#5a3800',colorLight:'#fdf6e3',correctLevel:QRCode.CorrectLevel.M});}});</script>
 
 
 
