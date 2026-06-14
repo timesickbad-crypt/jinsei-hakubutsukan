@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0046)file:///C:/Users/mad_c/Downloads/index_10.html -->
+<!-- saved from url=(0046)file:///C:/Users/mad_c/Downloads/index_11.html -->
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -272,7 +272,7 @@ select.form-inp option{background:#111;}
   <div class="museum-title">人　生　博　物　館</div>
   <div class="museum-sub">— すべての人生は、展示に値する —</div>
   <div class="mission">人類は進歩の歴史を語る。<br>しかしその裏には、語られない無数の記憶と、未完の夢と、<br>静かに輝く達成がある。<br><br>本館は、あなたの人生を一枚の名画として展示する。</div>
-  <div class="open-status" id="entrance-status">— 本日休館 —</div>
+  <div class="open-status" id="entrance-status">— 開館中 —</div>
   <div class="hall-nav" id="hall-nav">
     <button class="hall-btn" onclick="enterHall(&#39;memory&#39;)">
       <span class="hall-no">第一</span>
@@ -280,7 +280,7 @@ select.form-inp option{background:#111;}
         <span class="hall-name">記憶館</span>
         <span class="hall-desc">初恋・修学旅行・亡くなった家族…人生の思い出を展示する場…</span>
       </span>
-      <span class="hall-count" id="ec-memory">1点</span>
+      <span class="hall-count" id="ec-memory">—点</span>
       <span class="hall-arrow">›</span>
     </button>
     <button class="hall-btn" onclick="enterHall(&#39;words&#39;)">
@@ -289,7 +289,7 @@ select.form-inp option{background:#111;}
         <span class="hall-name">言葉館</span>
         <span class="hall-desc">上司・恩師・子供に言われた、あの一言を展示する…</span>
       </span>
-      <span class="hall-count" id="ec-words">1点</span>
+      <span class="hall-count" id="ec-words">—点</span>
       <span class="hall-arrow">›</span>
     </button>
     <button class="hall-btn" onclick="enterHall(&#39;unfinish&#39;)">
@@ -298,7 +298,7 @@ select.form-inp option{background:#111;}
         <span class="hall-name">未完成館</span>
         <span class="hall-desc">完成しなかった曲、出せなかったラブレター、あきらめた夢…</span>
       </span>
-      <span class="hall-count" id="ec-unfinish">1点</span>
+      <span class="hall-count" id="ec-unfinish">—点</span>
       <span class="hall-arrow">›</span>
     </button>
     <button class="hall-btn" onclick="enterHall(&#39;branch&#39;)">
@@ -307,7 +307,7 @@ select.form-inp option{background:#111;}
         <span class="hall-name">分岐館</span>
         <span class="hall-desc">あの日、違う道を選んでいたなら—人生の分岐点を展示する…</span>
       </span>
-      <span class="hall-count" id="ec-branch">0点</span>
+      <span class="hall-count" id="ec-branch">—点</span>
       <span class="hall-arrow">›</span>
     </button>
     <button class="hall-btn" onclick="enterHall(&#39;treasure&#39;)">
@@ -316,7 +316,7 @@ select.form-inp option{background:#111;}
         <span class="hall-name">宝物館</span>
         <span class="hall-desc">壊れた時計、古い手紙、切符…本人だけが知る宝物…</span>
       </span>
-      <span class="hall-count" id="ec-treasure">0点</span>
+      <span class="hall-count" id="ec-treasure">—点</span>
       <span class="hall-arrow">›</span>
     </button>
     <button class="hall-btn" onclick="enterHall(&#39;failure&#39;)">
@@ -325,7 +325,7 @@ select.form-inp option{background:#111;}
         <span class="hall-name">失敗館</span>
         <span class="hall-desc">人類の失敗を油絵として展示する、第六天魔王の領域…</span>
       </span>
-      <span class="hall-count" id="ec-failure">0点</span>
+      <span class="hall-count" id="ec-failure">—点</span>
       <span class="hall-arrow">›</span>
     </button>
     <button class="hall-btn" onclick="enterHall(&#39;lifework&#39;)">
@@ -334,7 +334,7 @@ select.form-inp option{background:#111;}
         <span class="hall-name">人生作品館</span>
         <span class="hall-desc">人生を通じて誇れる完成品—仕事・子供・店・作品…</span>
       </span>
-      <span class="hall-count" id="ec-lifework">0点</span>
+      <span class="hall-count" id="ec-lifework">—点</span>
       <span class="hall-arrow">›</span>
     </button>
     <button class="hall-btn" onclick="enterHall(&#39;future&#39;)">
@@ -343,7 +343,7 @@ select.form-inp option{background:#111;}
         <span class="hall-name">未来館</span>
         <span class="hall-desc">10年後の自分へ、未来の誰かへ—時を超えた手紙を展示する…</span>
       </span>
-      <span class="hall-count" id="ec-future">0点</span>
+      <span class="hall-count" id="ec-future">—点</span>
       <span class="hall-arrow">›</span>
     </button></div>
   <div class="entrance-footer">
@@ -1414,7 +1414,8 @@ function renderArtModal(){
   const emp=load(K.empathy)||{};
   const ec=_cache.ecnt||{};
   const hasEmp=!!emp[w.id];const cnt=ec[w.id]||0;
-  const hallObj=HALLS.find(x=>x.id===w.hall)||{name:w.hall||'—',icon:'🖼'};
+  const hallObj=HALLS.find(x=>x.id===w.hall)||{name:w.hall||'—',icon:'🖼',empathy:'これ俺だ'};
+  const empLabel2=hallObj.empathy||'これ俺だ';
 
   // メディア表示
   let mediaHtml='';
